@@ -126,6 +126,9 @@ release(bool, OCL_STUB_PROGRAMS, false,                                       \
         "1 = Enables OCL programs stubing")                                   \
 release(bool, GPU_ANALYZE_HANG, false,                                        \
         "1 = Enables GPU hang analysis")                                      \
+release(bool, GPU_APU_SMALL_CACHE, false,                                     \
+        "1 = Cap CLR resource cache to Local/8 on HIP APU. Set=1 when running \
+         PyTorch/ComfyUI to prevent WDDM budget OOM. Default off.")           \
 release(uint, GPU_MAX_REMOTE_MEM_SIZE, 2,                                     \
         "Maximum size (in Ki) that allows device memory substitution with system") \
 release(bool, GPU_ADD_HBCC_SIZE, false,                                        \

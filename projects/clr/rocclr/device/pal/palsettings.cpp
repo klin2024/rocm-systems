@@ -331,12 +331,23 @@ bool Settings::create(const Pal::DeviceProperties& palProp,
     resourceCacheSize_ = std::max((heaps[Pal::GpuHeapGartUswc].logicalSize / 8),
                                   (uint64_t)GPU_RESOURCE_CACHE_SIZE * Mi);
   } else {
-    if (apuSystem_) {
+    if (apuSystem_ && amd::IS_HIP && GPU_APU_SMALL_CACHE) {
+      // HIP APU caps cache to Local/8 so WDDM can reclaim on OOM.
+      // Enable with GPU_APU_SMALL_CACHE=1 (e.g. when running PyTorch / ComfyUI).
+      // Without this, CLR cache grows ~1.5GB and submit fails ErrorOutOfGpuMemory.
+      resourceCacheSize_ = std::max(
+          (heaps[Pal::GpuHeapLocal].logicalSize / 8),
+          (uint64_t)GPU_RESOURCE_CACHE_SIZE * Mi);
+      LogPrintfInfo("GPU_APU_SMALL_CACHE=ON  resourceCacheSize=%.0fMB",
+              double(resourceCacheSize_) / 1024 / 1024);
+    } else if (apuSystem_) {
       resourceCacheSize_ = std::max(
           ((heaps[Pal::GpuHeapLocal].logicalSize + heaps[Pal::GpuHeapInvisible].logicalSize +
             heaps[Pal::GpuHeapGartUswc].logicalSize) /
            8),
           (uint64_t)GPU_RESOURCE_CACHE_SIZE * Mi);
+      LogPrintfInfo("GPU_APU_SMALL_CACHE=OFF resourceCacheSize=%.0fMB",
+              double(resourceCacheSize_) / 1024 / 1024);
     } else {
       resourceCacheSize_ = std::max(
           ((heaps[Pal::GpuHeapLocal].logicalSize + heaps[Pal::GpuHeapInvisible].logicalSize) / 8),
